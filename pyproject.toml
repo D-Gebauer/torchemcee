@@ -1,0 +1,108 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "torchemcee"
+version = "0.1.0"
+authors = [
+    { name="David Gebauer", email="git@gebauer.ai" },
+]
+description = "emcee-style ensemble sampler in PyTorch, batched over many targets"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Astronomy",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+keywords = [
+    "mcmc", "ensemble-sampler", "affine-invariant", "emcee", "pytorch",
+    "gpu", "simulation-based-inference", "sbi", "cosmology",
+]
+dependencies = [
+    "numpy>=1.20.0",
+    "torch>=2.0.0",
+    "tqdm",
+]
+
+[project.optional-dependencies]
+hdf5 = [
+    "h5py>=3.0.0",
+]
+sbi = [
+    "sbi>=0.23.0",
+    "zuko>=1.0.0",
+]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "emcee>=3.1.0",
+    "scipy>=1.9.0",
+    "h5py>=3.0.0",
+    "black>=22.0.0",
+    "isort>=5.0.0",
+    "flake8>=5.0.0",
+    "mypy>=1.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/D-Gebauer/torchemcee"
+Repository = "https://github.com/D-Gebauer/torchemcee"
+"Bug Tracker" = "https://github.com/D-Gebauer/torchemcee/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.black]
+line-length = 88
+target-version = ['py310']
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+known_first_party = ["torchemcee"]
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = ["tqdm.*", "h5py.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "gpu: marks tests that require a CUDA device",
+    "sbi: marks tests that require the optional sbi/zuko extras",
+]

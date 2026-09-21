@@ -1,0 +1,54 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Packaging / build
+build/
+dist/
+*.egg-info/
+.eggs/
+wheelhouse/
+pip-wheel-metadata/
+
+# Environments
+.venv/
+venv/
+env/
+.python-version
+
+# Testing / coverage / typing
+.pytest_cache/
+.benchmarks/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+junit.xml
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.tox/
+.nox/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Documentation builds
+docs/_build/
+docs/generated/
+
+# Editors / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Run outputs (chains can be very large)
+*.h5
+*.hdf5
+*.npy
+*.npz
+output/
+results/
