@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""The base class for the ensemble ("red-blue") moves"""
-
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -16,7 +14,8 @@ __all__ = ["RedBlueMove"]
 
 
 class RedBlueMove(Move):
-    """An abstract ensemble move with an associated method of proposing
+    """An abstract red-blue ensemble move with parallelization as described in
+    `Foreman-Mackey et al. (2013) <https://arxiv.org/abs/1202.3665>`_
 
     The ensemble is split into ``nsplits`` sub-ensembles and each one is
     updated using only the others, so a whole sub-ensemble is a single
@@ -42,12 +41,7 @@ class RedBlueMove(Move):
         self.randomize_split = bool(randomize_split)
 
     def setup(self, coords: torch.Tensor) -> None:
-        """Called once at the start of every proposal, before the splits
-
-        Args:
-            coords (torch.Tensor): The current positions.
-
-        """
+        pass
 
     @abstractmethod
     def get_proposal(
@@ -80,6 +74,7 @@ class RedBlueMove(Move):
         generator: Optional[torch.Generator] = None,
     ) -> Tuple[State, torch.Tensor]:
         """Advance the ensemble by one sweep over the sub-ensembles"""
+        # Check that the dimensions are compatible.
         coords = state.coords
         ntargets, nwalkers, _ndim = coords.shape
         if nwalkers < 2 * self.nsplits:
@@ -89,12 +84,14 @@ class RedBlueMove(Move):
             )
         device = coords.device
 
+        # Run any move-specific setup.
         self.setup(coords)
 
         accepted_mask = torch.zeros(
             (ntargets, nwalkers), dtype=torch.bool, device=device
         )
 
+        # Split the ensemble and iterate over the sub-ensembles.
         order = torch.arange(nwalkers, device=device)
         if self.randomize_split:
             order = order[torch.randperm(nwalkers, generator=generator, device=device)]
@@ -106,7 +103,11 @@ class RedBlueMove(Move):
 
             s = coords[:, active]
             c = [coords[:, idx] for idx in complement]
+
+            # Get the move-specific proposal.
             proposal, factors = self.get_proposal(s, c, generator)
+
+            # Compute the lnprobs of the proposed position.
             new_log_prob, new_blobs = compute_log_prob(proposal)
 
             accept = self._accept(

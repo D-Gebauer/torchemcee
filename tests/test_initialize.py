@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""Initial-state helpers"""
-
 from __future__ import annotations
 
 import numpy as np
@@ -70,7 +68,6 @@ def test_ball_accepts_per_parameter_scale():
 
 
 def test_ball_resamples_invalid_walkers():
-    """With a bounded target, no walker is returned outside the support"""
     ndim = 2
     low, high = [-1.0, -1.0], [1.0, 1.0]
     log_prob_fn = bounded_gaussian_log_prob(np.zeros(ndim), np.eye(ndim), low, high)
@@ -91,7 +88,6 @@ def test_ball_resamples_invalid_walkers():
 
 
 def test_ball_raises_when_center_is_invalid():
-    """A centre outside the support cannot be rescued by resampling"""
     ndim = 2
     log_prob_fn = bounded_gaussian_log_prob(
         np.zeros(ndim), np.eye(ndim), [-1.0, -1.0], [1.0, 1.0]

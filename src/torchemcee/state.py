@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""The state of the ensemble"""
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -46,17 +44,14 @@ class State:
 
     @property
     def ntargets(self) -> int:
-        """int: The number of target distributions"""
         return int(self.coords.shape[0])
 
     @property
     def nwalkers(self) -> int:
-        """int: The number of walkers per target"""
         return int(self.coords.shape[1])
 
     @property
     def ndim(self) -> int:
-        """int: The number of parameters"""
         return int(self.coords.shape[2])
 
     def validate(self, *, allow_nonfinite: bool = False) -> None:
@@ -118,7 +113,6 @@ class State:
 
     @property
     def has_blobs(self) -> bool:
-        """bool: Whether this state carries blobs"""
         return self.blobs is not None
 
     def clone(self) -> "State":
@@ -137,19 +131,7 @@ class State:
         device: Optional[torch.device] = None,
         dtype: Optional[torch.dtype] = None,
     ) -> "State":
-        """Returns a copy of this state on another device or in another dtype
-
-        Args:
-            device (Optional[torch.device]): The target device, or ``None``
-                to keep the current one.
-            dtype (Optional[torch.dtype]): The target dtype for the floating
-                point tensors, or ``None`` to keep the current one. The
-                acceptance counts always stay integral.
-
-        Returns:
-            State: The converted state.
-
-        """
+        """Returns a copy on another device or dtype, ``accepted`` stays int64"""
         return State(
             coords=self.coords.to(device=device, dtype=dtype),
             log_prob=self.log_prob.to(device=device, dtype=dtype),

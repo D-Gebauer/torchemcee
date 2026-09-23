@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""The optional sbi and zuko adapters"""
-
 from __future__ import annotations
 
 import numpy as np
@@ -26,10 +24,7 @@ NDIM, XDIM = 2, 2
 
 @pytest.fixture(scope="module")
 def trained():
-    """A small likelihood flow for x = theta + noise, trained briefly
-
-    With a flat prior the posterior is just a unit Gaussian centred on x.
-    """
+    # with a flat prior the posterior is a unit Gaussian centred on x
     torch.manual_seed(0)
     n = 4000
     prior = BoxUniform(low=-3 * torch.ones(NDIM), high=3 * torch.ones(NDIM))
@@ -49,7 +44,6 @@ def trained():
 
 
 def test_flow_log_prob_fn_shapes(trained):
-    """(ntargets, n, ndim) maps to (ntargets, n)"""
     estimator, prior = trained
     x_o = torch.zeros(3, XDIM)
     fn = flow_log_prob_fn(estimator, x_o, prior=prior)
@@ -60,7 +54,6 @@ def test_flow_log_prob_fn_shapes(trained):
 
 
 def test_conditioning_matches_target_index(trained):
-    """Target b is conditioned on x_o[b] and nothing else"""
     estimator, prior = trained
     x_o = torch.tensor([[-2.0, -2.0], [2.0, 2.0]])
     fn = flow_log_prob_fn(estimator, x_o, prior=prior)
@@ -83,7 +76,6 @@ def test_flow_rejects_target_mismatch(trained):
 
 
 def test_potential_adapter_matches_flow_adapter(trained):
-    """The sbi potential and the direct flow route agree"""
     estimator, prior = trained
     x_o = torch.tensor([[0.5, -0.5], [1.0, 1.0]])
 
@@ -96,7 +88,6 @@ def test_potential_adapter_matches_flow_adapter(trained):
 
 
 def test_posterior_is_centred_on_the_observation(trained):
-    """Sampling the adapter recovers the known posterior of the toy model"""
     estimator, prior = trained
     x_o = torch.tensor([[-1.0, 0.5], [1.0, -0.5]])
     log_prob_fn = flow_log_prob_fn(estimator, x_o, prior=prior)

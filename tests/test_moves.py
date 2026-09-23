@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""The moves"""
-
 from __future__ import annotations
 
 from typing import List, Tuple
@@ -46,7 +44,6 @@ def _run(move, ndim=2, nwalkers=64, nsteps=4000, seed=4, ntargets=1):
 
 @pytest.mark.parametrize("move_cls", ALL_ENSEMBLE_MOVES)
 def test_every_move_samples_a_gaussian(move_cls):
-    """Every ensemble move recovers a correlated Gaussian"""
     s, cov = _run(move_cls())
     chain = s.get_chain(flat=True)[0]
     assert np.allclose(chain.mean(axis=0), 0.0, atol=0.12)
@@ -57,7 +54,6 @@ def test_every_move_samples_a_gaussian(move_cls):
 
 @pytest.mark.parametrize("move_cls", ALL_ENSEMBLE_MOVES)
 def test_every_move_keeps_targets_independent(move_cls):
-    """No move may leak walkers between targets"""
     ndim, nwalkers, ntargets = 2, 64, 3
     means = np.array([[-30.0, -30.0], [0.0, 0.0], [30.0, 30.0]])
     log_prob_fn = gaussian_log_prob(means, np.eye(ndim))
@@ -89,8 +85,6 @@ def test_every_move_keeps_targets_independent(move_cls):
 
 
 def test_mh_move_samples_a_gaussian():
-    """The Metropolis-Hastings move works through its proposal function"""
-
     def proposal(coords, generator):
         noise = torch.randn(
             coords.shape,
@@ -137,7 +131,6 @@ def test_gaussian_move_validates_arguments():
 
 
 def test_stretch_z_distribution():
-    """z is distributed as g(z) proportional to 1/sqrt(z) on [1/a, a]"""
     a = 2.0
     g = torch.Generator()
     g.manual_seed(0)
@@ -155,7 +148,6 @@ def test_stretch_z_distribution():
 
 
 def test_detailed_balance_on_gaussian():
-    """Started at the target, the ensemble stays at the target"""
     ndim, nwalkers = 2, 64
     cov = correlated_cov(ndim)
     log_prob_fn = gaussian_log_prob(np.zeros(ndim), cov)
@@ -177,11 +169,7 @@ def test_detailed_balance_on_gaussian():
 
 
 def test_jacobian_factor_present():
-    """Dropping the (ndim - 1) log z term biases a high-dimensional Gaussian"""
-
     class NoJacobianStretch(StretchMove):
-        """The stretch move with its proposal-density ratio zeroed out"""
-
         def get_proposal(self, s, c, generator):
             q, _factors = super().get_proposal(s, c, generator)
             return q, torch.zeros(s.shape[:2], device=s.device, dtype=s.dtype)
@@ -198,7 +186,6 @@ def test_jacobian_factor_present():
 
 
 def test_partners_come_from_the_complement():
-    """A move never proposes a walker towards a member of its own split"""
     seen: List[Tuple[int, int]] = []
 
     class Recording(RedBlueMove):
@@ -236,7 +223,6 @@ def test_rejects_bad_nsplits():
 
 
 def test_rejects_too_few_walkers_for_nsplits():
-    """A move needs at least two walkers per sub-ensemble"""
     state = State(
         coords=torch.zeros(1, 6, 2),
         log_prob=torch.zeros(1, 6),

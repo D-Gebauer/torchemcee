@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""emcee-style ensemble sampler in PyTorch, batched over many targets"""
-
 from . import autocorr, moves
 from .autocorr import AutocorrError, integrated_time
 from .backends import Backend, HDF5Backend, MemoryBackend, TempHDF5Backend

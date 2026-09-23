@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""The affine-invariant stretch move"""
-
 from __future__ import annotations
 
 from typing import Any, List, Optional, Tuple
@@ -14,8 +12,10 @@ __all__ = ["StretchMove"]
 
 
 class StretchMove(RedBlueMove):
-    """The affine-invariant stretch move of `Goodman & Weare (2010)
-    <https://msp.org/camcos/2010/5-1/p04.xhtml>`_
+    """A `Goodman & Weare (2010)
+    <https://msp.org/camcos/2010/5-1/p04.xhtml>`_ "stretch move" with
+    parallelization as described in `Foreman-Mackey et al. (2013)
+    <https://arxiv.org/abs/1202.3665>`_
 
     Each walker is moved along the line to a random walker of the
     complement, by a factor ``z`` drawn from ``g(z) ∝ 1/sqrt(z)`` on
@@ -42,7 +42,6 @@ class StretchMove(RedBlueMove):
         c: List[torch.Tensor],
         generator: Optional[torch.Generator],
     ) -> Tuple[torch.Tensor, torch.Tensor]:
-        """Stretch each walker towards a random member of the complement"""
         c_cat = torch.cat(c, dim=1)
         ntargets, ns, ndim = s.shape
         nc = c_cat.shape[1]

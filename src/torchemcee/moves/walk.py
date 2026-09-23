@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""The Goodman & Weare walk move"""
-
 from __future__ import annotations
 
 from typing import Any, List, Optional, Tuple
@@ -14,7 +12,10 @@ __all__ = ["WalkMove"]
 
 
 class WalkMove(RedBlueMove):
-    """A Goodman & Weare walk move
+    """A `Goodman & Weare (2010)
+    <https://msp.org/camcos/2010/5-1/p04.xhtml>`_ "walk move" with
+    parallelization as described in `Foreman-Mackey et al. (2013)
+    <https://arxiv.org/abs/1202.3665>`_
 
     The proposal is a Gaussian with the covariance of a random subset of the
     complement.
@@ -38,7 +39,6 @@ class WalkMove(RedBlueMove):
         c: List[torch.Tensor],
         generator: Optional[torch.Generator],
     ) -> Tuple[torch.Tensor, torch.Tensor]:
-        """Draw from a Gaussian fitted to a subset of the complement"""
         c_cat = torch.cat(c, dim=1)
         ntargets, ns, ndim = s.shape
         nc = c_cat.shape[1]

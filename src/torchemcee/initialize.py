@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""Helpers for setting up the initial walker positions"""
-
 from __future__ import annotations
 
 from typing import Callable, Optional, Tuple, Union

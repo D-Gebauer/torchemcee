@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""Check that the API matches emcee's"""
-
 from __future__ import annotations
 
 import numpy as np
@@ -40,14 +38,12 @@ def _start(ntargets=1, seed=1):
 
 
 def test_sampler_surface_covers_emcee():
-    """Every public name on emcee's sampler exists on ours"""
     ours = {n for n in dir(torchemcee.EnsembleSampler) if not n.startswith("_")}
     theirs = {n for n in dir(emcee.EnsembleSampler) if not n.startswith("_")}
     assert not theirs - ours, f"missing: {sorted(theirs - ours)}"
 
 
 def test_module_surface_covers_emcee():
-    """The moves, autocorr and backends modules cover emcee's names"""
     move_names = {
         n for n in dir(emcee.moves) if not n.startswith("_") and n[0].isupper()
     }
@@ -85,7 +81,6 @@ def test_iteration_and_get_last_sample():
 
 
 def test_continue_from_previous_state():
-    """Passing None continues where the previous run stopped"""
     s = _sampler()
     first = s.run_mcmc(_start(), 20, progress=False)
     second = s.run_mcmc(None, 20, progress=False)
@@ -107,7 +102,6 @@ def test_continue_from_previous_state():
 
 
 def test_random_state_roundtrip():
-    """Restoring the generator state reproduces the following chain"""
     s = _sampler()
     s.run_mcmc(_start(), 10, progress=False)
     saved = s.random_state
@@ -140,7 +134,6 @@ def test_compute_log_prob_rejects_nan():
 
 
 def test_blobs_roundtrip():
-    """A log-probability function may return metadata alongside the value"""
     inner = gaussian_log_prob(np.zeros(NDIM), np.eye(NDIM))
 
     def log_prob_fn(theta):
@@ -178,7 +171,6 @@ def test_no_blobs_raises_on_access():
 
 
 def test_weighted_move_list():
-    """A weighted list of moves is normalized and drawn from"""
     s = _sampler(moves=[(torchemcee.DEMove(), 0.8), (torchemcee.DESnookerMove(), 0.2)])
     assert len(s.moves) == 2
     assert np.isclose(sum(s._weights), 1.0)
@@ -203,7 +195,6 @@ def test_malformed_move_lists():
 
 
 def test_walkers_independent_flags_degenerate_start():
-    """Identical walkers cannot span the space, and are rejected"""
     coords = torch.zeros(2, NWALKERS, NDIM, dtype=torch.float64)
     coords[1] = torch.randn(NWALKERS, NDIM, dtype=torch.float64)
     ok = torchemcee.walkers_independent(coords)
@@ -219,7 +210,6 @@ def test_walkers_independent_flags_degenerate_start():
 
 
 def test_deprecated_aliases_warn_and_work():
-    """emcee's deprecated properties exist, warn, and return the right thing"""
     s = _sampler()
     s.run_mcmc(_start(), 20, progress=False)
 
@@ -237,7 +227,6 @@ def test_deprecated_aliases_warn_and_work():
 
 
 def test_move_singular_alias():
-    """The single-move shorthand still works and .move returns it"""
     move = torchemcee.DEMove()
     s = _sampler(move=move)
     assert s.move is move
@@ -247,7 +236,6 @@ def test_move_singular_alias():
 
 
 def test_autocorr_accepts_emcee_shaped_chain():
-    """autocorr.integrated_time takes a (nsteps, nwalkers, ndim) chain"""
     s = _sampler()
     s.run_mcmc(_start(), 2000, progress=False)
     batched = torchemcee.integrated_time(s.get_chain(numpy=False), quiet=True)
