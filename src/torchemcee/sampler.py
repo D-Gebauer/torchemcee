@@ -269,7 +269,7 @@ class EnsembleSampler:
                 # maybe the backend has a chain from an earlier session
                 try:
                     self._previous_state = self.backend.get_last_sample()
-                except (RuntimeError, NotImplementedError):
+                except RuntimeError:
                     raise ValueError(
                         "cannot continue without an initial state: the "
                         "sampler has not been run yet."
