@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""Diagnostics"""
-
 from __future__ import annotations
 
 import numpy as np
@@ -14,11 +12,7 @@ from .conftest import correlated_cov, gaussian_log_prob
 
 
 def _ar1_chain(tau, nsteps, nwalkers=32, ntargets=1, ndim=1, seed=0):
-    """An AR(1) process whose autocorrelation time is known analytically
-
-    For ``x_{t+1} = rho x_t + noise`` the integrated autocorrelation time is
-    ``(1 + rho) / (1 - rho)``, so rho is chosen to hit the requested tau.
-    """
+    # for x_{t+1} = rho x_t + noise, tau = (1 + rho) / (1 - rho)
     rho = (tau - 1.0) / (tau + 1.0)
     g = torch.Generator()
     g.manual_seed(seed)
@@ -44,7 +38,6 @@ def test_acceptance_fraction_rejects_zero_steps():
 
 
 def test_autocorr_time_on_known_ar1_process():
-    """The estimator recovers the analytic tau of an AR(1) process"""
     for tau in (5.0, 20.0):
         chain = _ar1_chain(tau, nsteps=200000, nwalkers=8)
         got = float(torchemcee.integrated_autocorr_time(chain, quiet=True)[0, 0])
@@ -67,7 +60,6 @@ def test_autocorr_quiet_downgrades_to_warning(caplog):
 
 
 def test_rhat_flags_non_mixing_ensemble():
-    """R-hat is near one for a converged chain and large for a stuck one"""
     converged = _ar1_chain(5.0, nsteps=4000, nwalkers=16)
     assert float(torchemcee.split_rhat(converged).max()) < 1.05
 
@@ -86,7 +78,6 @@ def test_effective_sample_size():
 
 
 def test_diagnostics_are_per_target():
-    """One failed target among many is identifiable by index"""
     good = _ar1_chain(3.0, nsteps=4000, nwalkers=16, seed=1)
     stuck = torch.zeros(4000, 1, 16, 1, dtype=torch.float64)
     stuck += torch.arange(16, dtype=torch.float64).reshape(1, 1, 16, 1)
@@ -113,7 +104,6 @@ def test_diagnostics_reject_wrong_shape():
 
 
 def test_sampler_autocorr_rescales_for_thinning():
-    """get_autocorr_time accounts for thinning applied at read time"""
     ndim, nwalkers = 2, 64
     g = torch.Generator()
     g.manual_seed(0)

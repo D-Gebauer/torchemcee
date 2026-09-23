@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""Chain storage policies"""
-
 from __future__ import annotations
 
 import numpy as np
@@ -16,7 +14,6 @@ NDIM, NWALKERS = 2, 32
 
 
 def _run(backend, seed=0, **kwargs):
-    """Run a Gaussian with a fixed seed (also for the starting positions)"""
     g = torch.Generator()
     g.manual_seed(seed)
     g_start = torch.Generator()
@@ -35,7 +32,6 @@ def _run(backend, seed=0, **kwargs):
 
 
 def test_store_all_and_thinned_agree():
-    """The thinned backend stores exactly what the full chain would yield"""
     kw = dict(nsteps=30, discard=20, thin_by=3)
     full = _run(torchemcee.MemoryBackend(store="all", dtype=torch.float64), **kw)
     thinned = _run(torchemcee.MemoryBackend(store="thinned", dtype=torch.float64), **kw)
@@ -45,7 +41,6 @@ def test_store_all_and_thinned_agree():
 
 
 def test_auto_falls_back_to_thinned_under_budget():
-    """A chain that cannot fit the budget is stored thinned"""
     backend = torchemcee.MemoryBackend(store="auto", budget=1e-9, dtype=torch.float64)
     s = _run(backend, nsteps=10, discard=20, thin_by=2)
     assert backend.stores_all is False
@@ -60,7 +55,6 @@ def test_auto_stores_all_when_it_fits():
 
 
 def test_buffer_reused_across_runs_of_same_shape():
-    """Sequential runs of the same shape do not reallocate"""
     backend = torchemcee.MemoryBackend(store="all", dtype=torch.float64)
     _run(backend, nsteps=25)
     first = backend._chain.data_ptr()
@@ -77,7 +71,6 @@ def test_buffer_reallocated_when_shape_changes():
 
 
 def test_offload_matches_device_storage():
-    """Offloading to the host stores the same numbers"""
     on_device = _run(
         torchemcee.MemoryBackend(store="all", dtype=torch.float64),
         seed=3,
@@ -93,7 +86,6 @@ def test_offload_matches_device_storage():
 
 
 def test_flat_layout_groups_by_target():
-    """flat=True gives (ntargets, nsteps * nwalkers, ndim) without mixing targets"""
     ntargets, nsteps = 3, 7
     backend = torchemcee.MemoryBackend(store="all", dtype=torch.float64)
     backend.reset(ntargets, NWALKERS, NDIM, nsteps)

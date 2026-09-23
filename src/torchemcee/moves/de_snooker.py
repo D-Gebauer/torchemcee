@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""The snooker differential evolution move"""
-
 from __future__ import annotations
 
 from typing import Any, List, Optional, Tuple
@@ -19,6 +17,9 @@ class DESnookerMove(RedBlueMove):
     Based on `Ter Braak & Vrugt (2008)
     <https://doi.org/10.1007/s11222-008-9104-9>`_, following the
     implementation in emcee.
+
+    Credit goes to GitHub user `mdanthony17 <https://github.com/mdanthony17>`_
+    for proposing this as an addition to the original emcee package.
 
     This always uses four sub-ensembles, since it needs three complements.
 
@@ -40,7 +41,6 @@ class DESnookerMove(RedBlueMove):
         c: List[torch.Tensor],
         generator: Optional[torch.Generator],
     ) -> Tuple[torch.Tensor, torch.Tensor]:
-        """Project a complement difference onto the snooker direction"""
         ntargets, ns, ndim = s.shape
         device, dtype = s.device, s.dtype
 

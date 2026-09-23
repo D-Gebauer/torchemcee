@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""Shared fixtures and test targets"""
-
 from __future__ import annotations
 
 import numpy as np
@@ -31,22 +29,11 @@ def device(request) -> torch.device:
 
 
 def correlated_cov(ndim: int, rho: float = 0.6) -> np.ndarray:
-    """A correlated covariance matrix"""
     i = np.arange(ndim)
     return rho ** np.abs(i[:, None] - i[None, :])
 
 
 def gaussian_log_prob(mean, cov, *, dtype=DTYPE):
-    """A correlated Gaussian with known mean and covariance
-
-    Args:
-        mean: The mean, with shape ``(ndim,)`` or ``(ntargets, ndim)``.
-        cov: The covariance, with shape ``(ndim, ndim)``.
-
-    Returns:
-        callable: A log-probability function for the sampler.
-
-    """
     mean_t = torch.as_tensor(mean, dtype=dtype)
     if mean_t.dim() == 1:
         mean_t = mean_t.unsqueeze(0)
@@ -62,8 +49,6 @@ def gaussian_log_prob(mean, cov, *, dtype=DTYPE):
 
 
 def rosenbrock_log_prob(a: float = 1.0, b: float = 100.0):
-    """The usual Rosenbrock banana"""
-
     def log_prob_fn(theta: torch.Tensor) -> torch.Tensor:
         x, y = theta[..., 0], theta[..., 1]
         return -((a - x) ** 2 + b * (y - x**2) ** 2) / 20.0
@@ -72,7 +57,6 @@ def rosenbrock_log_prob(a: float = 1.0, b: float = 100.0):
 
 
 def bounded_gaussian_log_prob(mean, cov, low, high, *, dtype=DTYPE):
-    """A Gaussian truncated to a box, returning ``-inf`` outside it"""
     inner = gaussian_log_prob(mean, cov, dtype=dtype)
     low_t = torch.as_tensor(low, dtype=dtype)
     high_t = torch.as_tensor(high, dtype=dtype)
@@ -91,7 +75,6 @@ def bounded_gaussian_log_prob(mean, cov, low, high, *, dtype=DTYPE):
 
 
 def emcee_log_prob(mean, cov):
-    """The same Gaussian as :func:`gaussian_log_prob`, for emcee (1-D input)"""
     icov = np.linalg.inv(np.asarray(cov))
     mean = np.asarray(mean)
 

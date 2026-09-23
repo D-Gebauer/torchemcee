@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""The abstract base class for moves"""
-
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -50,16 +48,7 @@ class Move(ABC):
         """
 
     def tune(self, state: State, accepted: torch.Tensor) -> None:
-        """Adapt the move to the current state
-
-        This is called after every proposal when the sampler runs with
-        ``tune=True``. The base implementation does nothing.
-
-        Args:
-            state (State): The state after the proposal.
-            accepted (torch.Tensor): The acceptance mask of the proposal.
-
-        """
+        pass
 
     @staticmethod
     def _accept(

@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""The differential evolution move"""
-
 from __future__ import annotations
 
 from typing import Any, List, Optional, Tuple
@@ -43,7 +41,6 @@ class DEMove(RedBlueMove):
         super().__init__(**kwargs)
 
     def setup(self, coords: torch.Tensor) -> None:
-        """Set gamma0, the default depends on ``ndim``"""
         if self.gamma0 is None:
             ndim = coords.shape[2]
             self.g0 = 2.38 / float(2 * ndim) ** 0.5
@@ -56,7 +53,6 @@ class DEMove(RedBlueMove):
         c: List[torch.Tensor],
         generator: Optional[torch.Generator],
     ) -> Tuple[torch.Tensor, torch.Tensor]:
-        """Displace each walker along a difference vector of the complement"""
         c_cat = torch.cat(c, dim=1)
         ntargets, ns, ndim = s.shape
         nc = c_cat.shape[1]
@@ -79,6 +75,7 @@ class DEMove(RedBlueMove):
         )
         diffs = idx(first) - idx(second)
 
+        # Sample a gamma value for each walker following Nelson et al. (2013)
         gamma = self.g0 * (
             1.0
             + self.sigma

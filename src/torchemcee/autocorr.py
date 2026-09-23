@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""Autocorrelation time estimation, like ``emcee.autocorr`` but batched"""
-
 from __future__ import annotations
 
 import logging
@@ -21,13 +19,10 @@ logger = logging.getLogger(__name__)
 
 
 class AutocorrError(Exception):
-    """Raised if the autocorrelation time cannot be reliably estimated
+    """Raised if the chain is too short to estimate an autocorrelation time
 
-    This normally means that the chain is too short. The current estimate is
-    available via the ``tau`` attribute.
-
-    Args:
-        tau (torch.Tensor): The best estimate of the autocorrelation time.
+    The current estimate of the autocorrelation time can be accessed via the
+    ``tau`` attribute of this exception.
 
     """
 
@@ -58,6 +53,8 @@ def function_1d(x: torch.Tensor) -> torch.Tensor:
 
     """
     n = next_pow_two(x.shape[-1])
+
+    # Compute the FFT and then (from that) the auto-correlation function
     centred = x - x.mean(dim=-1, keepdim=True)
     f = torch.fft.rfft(centred, n=2 * n, dim=-1)
     acf = torch.fft.irfft(f * torch.conj(f), n=2 * n, dim=-1)
@@ -67,18 +64,6 @@ def function_1d(x: torch.Tensor) -> torch.Tensor:
 
 
 def auto_window(taus: torch.Tensor, c: float) -> torch.Tensor:
-    """Apply Sokal's automatic windowing to a running sum
-
-    Args:
-        taus (torch.Tensor): The running estimate, with the window index
-            along the last axis.
-        c (float): The step size for the window search.
-
-    Returns:
-        torch.Tensor: The chosen window index, with the shape of ``taus``
-        without its last axis.
-
-    """
     nsteps = taus.shape[-1]
     m = torch.arange(nsteps, device=taus.device, dtype=taus.dtype)
     below = m < c * taus
@@ -141,6 +126,7 @@ def integrated_time(
     window = auto_window(taus, c)
     tau = torch.gather(taus, -1, window.unsqueeze(-1)).squeeze(-1)
 
+    # Check convergence
     too_short = tol * tau > nsteps
     if bool(too_short.any()):
         worst = float(tau.max())

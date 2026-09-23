@@ -1,11 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""Convergence diagnostics, batched over targets
-
-Everything here takes a chain with shape ``(nsteps, ntargets, nwalkers,
-ndim)`` and returns one value per target.
-"""
-
 from __future__ import annotations
 
 from typing import Optional

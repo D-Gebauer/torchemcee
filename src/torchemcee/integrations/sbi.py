@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""Adapters for ``sbi`` potentials and ``zuko`` flows, needs the ``sbi`` extra"""
-
 from __future__ import annotations
 
 from typing import Any, Callable, Dict, Optional
@@ -18,10 +16,6 @@ class _ConditionCache:
 
     ``n`` only takes a couple of different values during a run, so this
     avoids redoing the expand in every step.
-
-    Args:
-        x_o (torch.Tensor): The observations, with shape
-            ``(ntargets, x_dim)``.
 
     """
 

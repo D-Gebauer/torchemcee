@@ -51,6 +51,7 @@ class MHMove(Move):
         generator: Optional[torch.Generator] = None,
     ) -> Tuple[State, torch.Tensor]:
         """Advance every walker by one Metropolis-Hastings step"""
+        # Check to make sure that the dimensions match.
         ntargets, nwalkers, ndim = state.coords.shape
         if self.ndim is not None and self.ndim != ndim:
             raise ValueError(
@@ -58,7 +59,10 @@ class MHMove(Move):
                 f"{self.ndim}, the state has {ndim}."
             )
 
+        # Get the move-specific proposal.
         proposal, factors = self.get_proposal(state.coords, generator)
+
+        # Compute the lnprobs of the proposed position.
         new_log_prob, new_blobs = compute_log_prob(proposal)
 
         active = torch.arange(nwalkers, device=state.coords.device)

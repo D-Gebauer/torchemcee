@@ -1,1 +1,1 @@
-"""Optional adapters for other packages"""
+# -*- coding: utf-8 -*-

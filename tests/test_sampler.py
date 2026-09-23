@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""Core sampler behaviour"""
-
 from __future__ import annotations
 
 import numpy as np
@@ -32,7 +30,6 @@ def _sampler(log_prob_fn, ndim, nwalkers, ntargets, seed=3, **kwargs):
 
 
 def test_recovers_gaussian_moments():
-    """The mean and covariance match the analytic Gaussian"""
     ndim = 3
     mean = np.array([1.0, -2.0, 0.5])
     cov = correlated_cov(ndim)
@@ -49,7 +46,6 @@ def test_recovers_gaussian_moments():
 
 
 def test_ntargets_one_matches_unbatched_shape():
-    """A (nwalkers, ndim) start is promoted to a single target"""
     ndim, nwalkers = 2, 32
     s = _sampler(gaussian_log_prob(np.zeros(ndim), np.eye(ndim)), ndim, nwalkers, 1)
     start = torch.randn(nwalkers, ndim, dtype=torch.float64)
@@ -59,11 +55,8 @@ def test_ntargets_one_matches_unbatched_shape():
 
 
 def test_targets_are_independent():
-    """Each target recovers its own distribution
-
-    Four well separated Gaussians, so any mixing between targets would show
-    up in the means.
-    """
+    # four well separated Gaussians, so any mixing between targets
+    # shows up in the means
     ndim, nwalkers, ntargets = 3, 64, 4
     means = np.array([[-30.0] * ndim, [0.0] * ndim, [30.0] * ndim, [60.0] * ndim])
     log_prob_fn = gaussian_log_prob(means, np.eye(ndim))
@@ -90,10 +83,7 @@ def test_targets_are_independent():
 
 
 def test_batched_matches_sequential():
-    """Running B targets at once matches running them one at a time
-
-    Only statistically, the random numbers are used in a different order.
-    """
+    # only statistically, the random numbers are used in a different order
     ndim, nwalkers, ntargets = 2, 64, 3
     means = np.array([[-2.0, 1.0], [0.0, 0.0], [3.0, -1.0]])
     cov = correlated_cov(ndim)
@@ -124,7 +114,6 @@ def test_batched_matches_sequential():
 
 
 def test_seeded_runs_are_reproducible():
-    """The same generator seed gives a bit-identical chain"""
     ndim, nwalkers = 2, 32
     start = torch.randn(1, nwalkers, ndim, dtype=torch.float64)
     log_prob_fn = gaussian_log_prob(np.zeros(ndim), np.eye(ndim))
@@ -138,7 +127,6 @@ def test_seeded_runs_are_reproducible():
 
 
 def test_different_seeds_differ():
-    """Different seeds give different chains, so the seed is really used"""
     ndim, nwalkers = 2, 32
     start = torch.randn(1, nwalkers, ndim, dtype=torch.float64)
     log_prob_fn = gaussian_log_prob(np.zeros(ndim), np.eye(ndim))
@@ -151,7 +139,6 @@ def test_different_seeds_differ():
 
 
 def test_does_not_touch_global_rng():
-    """Sampling does not advance torch's global RNG stream"""
     ndim, nwalkers = 2, 32
     torch.manual_seed(0)
     before = torch.randn(4)
@@ -185,7 +172,6 @@ def test_rejects_too_few_walkers():
 
 
 def test_raises_on_nonfinite_initial_log_prob():
-    """A walker starting at -inf raises"""
     ndim, nwalkers = 2, 32
     log_prob_fn = bounded_gaussian_log_prob(
         np.zeros(ndim), np.eye(ndim), [-1.0, -1.0], [1.0, 1.0]
@@ -197,7 +183,6 @@ def test_raises_on_nonfinite_initial_log_prob():
 
 
 def test_allow_nonfinite_opt_out():
-    """The finiteness check can be waived explicitly"""
     ndim, nwalkers = 2, 32
     log_prob_fn = bounded_gaussian_log_prob(
         np.zeros(ndim), np.eye(ndim), [-1.0, -1.0], [1.0, 1.0]
@@ -217,7 +202,6 @@ def test_allow_nonfinite_opt_out():
 
 
 def test_bounded_target_stays_in_support():
-    """No stored sample ever leaves the support of a bounded target"""
     ndim, nwalkers = 2, 32
     low, high = [-1.0, -1.0], [1.0, 1.0]
     log_prob_fn = bounded_gaussian_log_prob(np.zeros(ndim), np.eye(ndim), low, high)
@@ -238,7 +222,6 @@ def test_bounded_target_stays_in_support():
 
 
 def test_log_prob_fn_sees_varying_n():
-    """The callable is invoked with n = nwalkers // 2 during moves"""
     ndim, nwalkers = 2, 32
     seen = []
     inner = gaussian_log_prob(np.zeros(ndim), np.eye(ndim))
@@ -271,7 +254,6 @@ def test_rejects_wrong_log_prob_shape():
 
 @pytest.mark.parametrize("dtype", [torch.float32, torch.float64])
 def test_dtype_roundtrip(dtype):
-    """Both precisions run and return the dtype they were asked for"""
     ndim, nwalkers = 2, 32
     g = torch.Generator()
     g.manual_seed(0)
@@ -289,7 +271,6 @@ def test_dtype_roundtrip(dtype):
 
 
 def test_thin_by_and_discard_counts():
-    """discard and thin_by control how many steps are retained"""
     ndim, nwalkers = 2, 32
     s = _sampler(
         gaussian_log_prob(np.zeros(ndim), np.eye(ndim)),
@@ -310,7 +291,6 @@ def test_thin_by_and_discard_counts():
 
 
 def test_acceptance_fraction_is_sane():
-    """A well-behaved Gaussian run accepts a sensible fraction of proposals"""
     ndim, nwalkers = 3, 64
     s = _sampler(
         gaussian_log_prob(np.zeros(ndim), correlated_cov(ndim)),

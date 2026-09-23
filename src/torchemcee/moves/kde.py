@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""A proposal using a kernel density estimate of the complement"""
-
 from __future__ import annotations
 
 from typing import Any, List, Optional, Tuple
@@ -17,9 +15,12 @@ class KDEMove(RedBlueMove):
     """A proposal using a kernel density estimate of the complementary
     sub-ensemble
 
+    This is a simplified version of the method used in `kombine
+    <https://github.com/bfarr/kombine>`_. If you use this proposal, you should
+    use *a lot* of walkers in your ensemble.
+
     Uses Scott's rule for the bandwidth by default, like
-    ``scipy.stats.gaussian_kde``. The proposal isn't symmetric, so its
-    density goes into the acceptance ratio.
+    ``scipy.stats.gaussian_kde``.
 
     Args:
         bw_method (Optional): The bandwidth rule, ``"scott"`` or
@@ -53,18 +54,7 @@ class KDEMove(RedBlueMove):
     def _log_pdf(
         x: torch.Tensor, centres: torch.Tensor, chol: torch.Tensor
     ) -> torch.Tensor:
-        """The log density of a Gaussian mixture centred on ``centres``
-
-        Args:
-            x (torch.Tensor): The evaluation points, ``(B, n, ndim)``.
-            centres (torch.Tensor): The kernel centres, ``(B, nc, ndim)``.
-            chol (torch.Tensor): The Cholesky factor of the bandwidth
-                matrix, ``(B, ndim, ndim)``.
-
-        Returns:
-            torch.Tensor: The log density, ``(B, n)``.
-
-        """
+        # x (B, n, ndim), centres (B, nc, ndim), chol (B, ndim, ndim) -> (B, n)
         ndim = x.shape[-1]
         nc = centres.shape[1]
         diff = x.unsqueeze(2) - centres.unsqueeze(1)  # (B, n, nc, ndim)
@@ -86,7 +76,6 @@ class KDEMove(RedBlueMove):
         c: List[torch.Tensor],
         generator: Optional[torch.Generator],
     ) -> Tuple[torch.Tensor, torch.Tensor]:
-        """Draw an independent sample from a KDE of the complement"""
         c_cat = torch.cat(c, dim=1)
         ntargets, ns, ndim = s.shape
         nc = c_cat.shape[1]

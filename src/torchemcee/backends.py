@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""Backends for storing the chain"""
-
 from __future__ import annotations
 
 import os
@@ -284,7 +282,6 @@ class MemoryBackend(Backend):
 
     @property
     def shape(self) -> Tuple[int, int, int]:
-        """tuple: The ``(ntargets, nwalkers, ndim)`` shape of the ensemble"""
         if self._chain is None:
             raise RuntimeError("reset() must be called before shape.")
         return tuple(self._chain.shape[1:])  # type: ignore[return-value]
@@ -297,7 +294,6 @@ class MemoryBackend(Backend):
         return self._accepted
 
     def has_blobs(self) -> bool:
-        """Returns ``True`` if this backend stored blobs"""
         return self._blobs is not None
 
     def plan(
@@ -309,12 +305,6 @@ class MemoryBackend(Backend):
         discard: int,
         thin_by: int,
     ) -> bool:
-        """Apply the storage policy to a planned run
-
-        Returns:
-            bool: Whether every step of the run will be stored.
-
-        """
         if self.store == "all":
             self.stores_all = True
         elif self.store == "thinned":
@@ -357,7 +347,6 @@ class MemoryBackend(Backend):
         self._nstored = 0
 
     def grow(self, ntargets: int, nwalkers: int, ndim: int, nsteps: int) -> None:
-        """Make room for ``nsteps`` more steps, keeping what is stored"""
         if self._chain is None or self._nstored == 0:
             self.reset(ntargets, nwalkers, ndim, nsteps)
             return
@@ -390,16 +379,6 @@ class MemoryBackend(Backend):
             self._blobs = grown_blobs
 
     def save_step(self, state: State) -> None:
-        """Append one retained step
-
-        Args:
-            state (State): The state to store.
-
-        Raises:
-            RuntimeError: If called before :func:`MemoryBackend.reset`, or
-                if the storage is already full.
-
-        """
         if self._chain is None:
             raise RuntimeError("reset() must be called before save_step().")
         nsteps = self._chain.shape[0]
@@ -431,28 +410,6 @@ class MemoryBackend(Backend):
         thin: int = 1,
         flat: bool = False,
     ) -> torch.Tensor:
-        """Get a stored quantity by name
-
-        Args:
-            name (str): One of ``"chain"``, ``"log_prob"`` or ``"blobs"``.
-            discard (Optional[int]): Discard this many steps from the
-                beginning of the stored chain. (default: ``0``)
-            thin (Optional[int]): Use only every ``thin`` steps.
-                (default: ``1``)
-            flat (Optional[bool]): Flatten the steps and walkers into a
-                single axis per target. (default: ``False``)
-
-        Returns:
-            torch.Tensor: The stored quantity, with shape
-            ``(nsteps, ntargets, nwalkers, ...)``, or
-            ``(ntargets, nsteps * nwalkers, ...)`` when flattened.
-
-        Raises:
-            ValueError: If ``name`` is not a stored quantity.
-            RuntimeError: If nothing has been stored, or the quantity was
-                not saved for this run.
-
-        """
         if self._nstored == 0:
             raise RuntimeError("no samples stored; run the sampler first.")
         if name == "chain":
@@ -483,12 +440,6 @@ class MemoryBackend(Backend):
         return out
 
     def get_last_sample(self) -> State:
-        """Returns the last stored state of the chain
-
-        Raises:
-            RuntimeError: If nothing has been stored yet.
-
-        """
         if self._chain is None or self._nstored == 0:
             raise RuntimeError("no samples stored; run the sampler first.")
         i = self._nstored - 1
@@ -592,12 +543,10 @@ class HDF5Backend(Backend):
 
     @property
     def iteration(self) -> int:
-        """int: The number of steps stored so far"""
         return self.nstored
 
     @property
     def shape(self) -> Tuple[int, int, int]:
-        """tuple: The ``(ntargets, nwalkers, ndim)`` shape of the ensemble"""
         with self.open() as f:
             g = f[self.name]
             return (
@@ -613,7 +562,6 @@ class HDF5Backend(Backend):
             return torch.from_numpy(f[self.name]["accepted"][...])
 
     def has_blobs(self) -> bool:
-        """Returns ``True`` if this backend stored blobs"""
         if not self.initialized:
             return False
         with self.open() as f:
@@ -628,7 +576,6 @@ class HDF5Backend(Backend):
         discard: int,
         thin_by: int,
     ) -> bool:
-        """Returns ``True`` if every step of the run is stored"""
         return self.store == "all"
 
     def reset(self, ntargets: int, nwalkers: int, ndim: int, nsteps: int) -> None:
@@ -658,7 +605,6 @@ class HDF5Backend(Backend):
                 )
 
     def grow(self, ntargets: int, nwalkers: int, ndim: int, nsteps: int) -> None:
-        """Make room for ``nsteps`` more steps, keeping what is stored"""
         if not self.initialized:
             self.reset(ntargets, nwalkers, ndim, nsteps)
             return
@@ -675,12 +621,6 @@ class HDF5Backend(Backend):
                     g[key].resize(n, axis=0)
 
     def save_step(self, state: State) -> None:
-        """Append one retained step
-
-        Args:
-            state (State): The state to store.
-
-        """
         with self.open("a") as f:
             g = f[self.name]
             i = int(g.attrs["iteration"])
@@ -714,7 +654,6 @@ class HDF5Backend(Backend):
         thin: int = 1,
         flat: bool = False,
     ) -> torch.Tensor:
-        """Get a stored quantity by name, see :func:`Backend.get_value`"""
         if name not in ("chain", "log_prob", "blobs"):
             raise ValueError(
                 f"{name!r} is not a stored quantity; expected 'chain', "
@@ -737,12 +676,6 @@ class HDF5Backend(Backend):
         return _flatten(out) if flat else out
 
     def get_last_sample(self) -> State:
-        """Returns the last stored state of the chain
-
-        Raises:
-            RuntimeError: If nothing has been stored yet.
-
-        """
         nstored = self.nstored
         if nstored == 0:
             raise RuntimeError("no samples stored; run the sampler first.")

@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""The HDF5 backend"""
-
 import numpy as np
 import pytest
 import torch
@@ -33,7 +31,6 @@ def _start():
 
 @pytest.mark.parametrize("blobs", [False, True])
 def test_matches_memory_backend(blobs):
-    """Same seed, same chain, no matter where it is stored"""
     ref = _sampler(torchemcee.MemoryBackend(device="cpu"), blobs=blobs)
     ref.run_mcmc(_start(), 20, discard=5, thin_by=2, progress=False)
     with torchemcee.TempHDF5Backend() as backend:
@@ -70,7 +67,6 @@ def test_continue_appends():
 
 
 def test_resume_from_file():
-    """A new sampler picks up the chain that is already in the file"""
     with torchemcee.TempHDF5Backend() as backend:
         s = _sampler(backend)
         last = s.run_mcmc(_start(), 10, progress=False)

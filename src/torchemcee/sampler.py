@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""The ensemble sampler"""
-
 from __future__ import annotations
 
 from typing import (
@@ -38,18 +36,9 @@ LogProbFn = Callable[[torch.Tensor], Any]
 
 
 def walkers_independent(coords: torch.Tensor) -> torch.Tensor:
-    """Check that the walkers of each target span the parameter space
+    """Same check as in emcee, done per target
 
-    Same check as in emcee, done per target. If the walkers are linearly
-    dependent (e.g. all started at the same point) the ensemble can never
-    leave the subspace they span.
-
-    Args:
-        coords (torch.Tensor): The positions, with shape
-            ``(ntargets, nwalkers, ndim)``.
-
-    Returns:
-        torch.Tensor: A boolean per target, with shape ``(ntargets,)``.
+    Takes ``(ntargets, nwalkers, ndim)`` and returns ``(ntargets,)`` booleans.
 
     """
     if not bool(torch.isfinite(coords).all()):
@@ -142,6 +131,7 @@ class EnsembleSampler:
         if ntargets < 1:
             raise ValueError(f"ntargets must be >= 1; got {ntargets}.")
 
+        # Parse the move schedule
         if moves is None and move is not None:
             moves = move
         self._moves, self._weights = _parse_moves(moves)
@@ -262,7 +252,6 @@ class EnsembleSampler:
         allow_nonfinite: bool = False,
         skip_initial_state_check: bool = False,
     ) -> State:
-        """Turn whatever was passed as initial state into a checked State"""
         continuing = initial_state is None
         if initial_state is None:
             if self._previous_state is None:
@@ -381,8 +370,8 @@ class EnsembleSampler:
                 starts a new chain.
             nsteps (int): The number of retained steps.
             discard (Optional[int]): The number of burn-in moves to take
-                before keeping anything. emcee doesn't have this, but this
-                way the burn-in never has to be stored. (default: ``0``)
+                before keeping anything, so the burn-in never has to be
+                stored. (default: ``0``)
             thin_by (Optional[int]): Retain one step every ``thin_by`` moves.
                 (default: ``1``)
             store (Optional[bool]): Save the chain to the backend.
@@ -455,7 +444,10 @@ class EnsembleSampler:
             step_range = trange(total_steps, **kw)
 
         for step in step_range:
+            # Choose a random move
             move = self._pick_move()
+
+            # Propose
             with torch.no_grad():
                 state, accepted = move.propose(
                     state, self.compute_log_prob, self.generator
@@ -463,6 +455,7 @@ class EnsembleSampler:
             if tune:
                 move.tune(state, accepted)
 
+            # Save the new step
             state.random_state = self.random_state
             retained = step >= discard and (step - discard) % thin_by == 0
             if store and (stores_all or retained):
@@ -474,7 +467,6 @@ class EnsembleSampler:
                 yield snapshot
 
     def _pick_move(self) -> Move:
-        """Draw one move from the weighted list"""
         if len(self._moves) == 1:
             return self._moves[0]
         weights = torch.as_tensor(
@@ -570,19 +562,16 @@ class EnsembleSampler:
     @property
     @deprecated("get_chain()")
     def chain(self) -> Any:  # pragma: no cover
-        """numpy.ndarray: Deprecated alias, ``(ntargets, nwalkers, nsteps, ndim)``"""
         return self.get_chain().transpose(1, 2, 0, 3)
 
     @property
     @deprecated("get_chain(flat=True)")
     def flatchain(self) -> Any:  # pragma: no cover
-        """numpy.ndarray: Deprecated alias for the flattened chain"""
         return self.get_chain(flat=True)
 
     @property
     @deprecated("get_log_prob()")
     def lnprobability(self) -> Any:  # pragma: no cover
-        """numpy.ndarray: Deprecated alias for the log-probabilities"""
         return self.get_log_prob()
 
     @property
@@ -590,25 +579,21 @@ class EnsembleSampler:
     def flatlnprobability(
         self,
     ) -> Any:  # pragma: no cover
-        """numpy.ndarray: Deprecated alias for the flat log-probabilities"""
         return self.get_log_prob(flat=True)
 
     @property
     @deprecated("get_blobs()")
     def blobs(self) -> Any:  # pragma: no cover
-        """numpy.ndarray: Deprecated alias for the blobs"""
         return self.get_blobs()
 
     @property
     @deprecated("get_blobs(flat=True)")
     def flatblobs(self) -> Any:  # pragma: no cover
-        """numpy.ndarray: Deprecated alias for the flattened blobs"""
         return self.get_blobs(flat=True)
 
     @property
     @deprecated("get_autocorr_time()")
     def acor(self) -> torch.Tensor:  # pragma: no cover
-        """torch.Tensor: Deprecated alias for the autocorrelation time"""
         return self.get_autocorr_time()
 
     @property
@@ -653,7 +638,6 @@ class EnsembleSampler:
 def _parse_moves(
     moves: Optional[Any],
 ) -> Tuple[List[Move], List[float]]:
-    """Normalize the ``moves`` argument into a list and a weight vector"""
     if moves is None:
         return [StretchMove()], [1.0]
     if isinstance(moves, Move):

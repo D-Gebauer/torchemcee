@@ -59,14 +59,18 @@ class GaussianMove(MHMove):
                 raise ValueError(f"factor must be >= 1.0; got {factor}.")
             self._log_factor = math.log(float(factor))
 
+        # Parse the proposal type.
         cov_t = torch.as_tensor(cov, dtype=torch.float64)
         if cov_t.dim() == 0:
+            # This was a scalar proposal.
             self._scale = cov_t.sqrt().reshape(1)
             self._chol: Optional[torch.Tensor] = None
         elif cov_t.dim() == 1:
+            # A diagonal proposal was given.
             self._scale = cov_t.sqrt()
             self._chol = None
         elif cov_t.dim() == 2:
+            # The full, square covariance matrix was given.
             if cov_t.shape[0] != cov_t.shape[1]:
                 raise ValueError(
                     f"a covariance matrix must be square; got " f"{tuple(cov_t.shape)}."

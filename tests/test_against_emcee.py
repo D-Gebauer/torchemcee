@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""Comparison against emcee"""
-
 from __future__ import annotations
 
 import numpy as np
@@ -27,7 +25,6 @@ DISCARD = 1000
 
 
 def _run_both(seed=7):
-    """Run the same correlated Gaussian through both samplers"""
     mean = np.linspace(-1.0, 1.0, NDIM)
     cov = correlated_cov(NDIM)
 
@@ -57,7 +54,6 @@ def _run_both(seed=7):
 
 
 def test_gaussian_two_sample_agreement():
-    """The two samplers produce the same distribution, per parameter"""
     ref, ours, mean, cov = _run_both()
 
     a = ref.get_chain(discard=DISCARD, flat=True)
@@ -76,12 +72,8 @@ def test_gaussian_two_sample_agreement():
 
 
 def test_rosenbrock_agreement():
-    """The samplers agree on a curved, badly conditioned target
-
-    tau is several hundred here so the means are quite noisy, which is why
-    they are compared within the combined MC error of both chains and not
-    with a fixed tolerance.
-    """
+    # tau is several hundred here, so the means are noisy and are
+    # compared within the combined MC error of both chains
     seed = 11
     rng = np.random.default_rng(seed)
     start = np.column_stack([rng.normal(1.0, 0.3, 64), rng.normal(1.0, 0.3, 64)])
@@ -126,7 +118,6 @@ def test_rosenbrock_agreement():
 
 
 def test_acceptance_fraction_agreement():
-    """Acceptance fractions agree for the same stretch scale"""
     ref, ours, _, _ = _run_both()
     assert np.isclose(
         float(ours.acceptance_fraction.mean()),
@@ -136,7 +127,6 @@ def test_acceptance_fraction_agreement():
 
 
 def test_autocorr_time_matches_emcee_estimator():
-    """Our estimator reproduces emcee's on a chain they both see"""
     ref, ours, _, _ = _run_both()
 
     for chain in (ref.get_chain(), ours.get_chain()[:, 0]):
