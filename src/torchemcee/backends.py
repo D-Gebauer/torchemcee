@@ -145,18 +145,23 @@ class Backend(ABC):
         """Get the stored chain of blobs"""
         return self.get_value("blobs", discard=discard, thin=thin, flat=flat)
 
+    @abstractmethod
     def get_last_sample(self) -> State:
-        """Returns the last stored state of the chain"""
-        raise NotImplementedError
+        """Returns the last stored state of the chain
+
+        Raises:
+            RuntimeError: If nothing has been stored yet.
+
+        """
 
     def has_blobs(self) -> bool:
         """Returns ``True`` if the backend stores blobs"""
         return False
 
     @property
+    @abstractmethod
     def shape(self) -> Tuple[int, int, int]:
         """tuple: The ``(ntargets, nwalkers, ndim)`` shape of the ensemble"""
-        raise NotImplementedError
 
     def get_autocorr_time(
         self, *, discard: int = 0, thin: int = 1, **kwargs: Any
