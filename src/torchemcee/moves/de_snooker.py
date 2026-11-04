@@ -15,8 +15,9 @@ class DESnookerMove(RedBlueMove):
     """A snooker proposal using differential evolution
 
     Based on `Ter Braak & Vrugt (2008)
-    <https://doi.org/10.1007/s11222-008-9104-9>`_, following the
-    implementation in emcee.
+    <https://doi.org/10.1007/s11222-008-9104-9>`_. The proposal moves along
+    the unit vector ``e = (x - z) / |x - z|`` by ``gammas * e . (z1 - z2)``,
+    and is accepted with the extra factor ``(|x' - z| / |x - z|)^(ndim - 1)``.
 
     Credit goes to GitHub user `mdanthony17 <https://github.com/mdanthony17>`_
     for proposing this as an addition to the original emcee package.
@@ -68,13 +69,13 @@ class DESnookerMove(RedBlueMove):
         delta = s - z
         norm = torch.linalg.norm(delta, dim=-1, keepdim=True)
         norm = norm.clamp_min(torch.finfo(dtype).tiny)
-        u = delta / torch.sqrt(norm)
+        e = delta / norm
 
-        projection = (u * z1).sum(-1, keepdim=True) - (u * z2).sum(-1, keepdim=True)
-        proposal = s + u * self.gammas * projection
+        projection = (e * (z1 - z2)).sum(-1, keepdim=True)
+        proposal = s + self.gammas * projection * e
 
         new_norm = torch.linalg.norm(proposal - z, dim=-1)
-        factors = (0.5 * (ndim - 1.0)) * (
+        factors = (ndim - 1.0) * (
             torch.log(new_norm.clamp_min(torch.finfo(dtype).tiny))
             - torch.log(norm.squeeze(-1))
         )

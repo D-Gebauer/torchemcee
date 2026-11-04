@@ -229,3 +229,29 @@ def test_rejects_too_few_walkers_for_nsplits():
     move = torchemcee.DESnookerMove()
     with pytest.raises(ValueError, match="at least 2 \\* nsplits"):
         move.propose(state, lambda c: (torch.zeros(c.shape[:2]), None), None)
+
+
+@pytest.mark.parametrize(
+    "moves",
+    [
+        torchemcee.DESnookerMove(),
+        [(torchemcee.DEMove(), 0.8), (torchemcee.DESnookerMove(), 0.2)],
+        torchemcee.DEMove(),
+        torchemcee.StretchMove(),
+    ],
+)
+def test_moves_sample_a_flat_box_with_the_right_width(moves):
+    """Logistic density in u = the uniform box in theta = sigmoid(u): sd(theta) = 1/sqrt(12)."""
+    ndim, nwalkers, ntargets = 9, 256, 4
+    g = torch.Generator()
+    g.manual_seed(0)
+
+    def log_prob_fn(u):
+        return (torch.nn.functional.logsigmoid(u) + torch.nn.functional.logsigmoid(-u)).sum(-1)
+
+    s = torchemcee.EnsembleSampler(log_prob_fn, ndim, nwalkers, ntargets, moves=moves, generator=g)
+    start = 0.3 * torch.randn(ntargets, nwalkers, ndim, generator=g)
+    s.run_mcmc(start, 1000, discard=2000, thin_by=4, progress=False)
+    theta = torch.sigmoid(s.get_chain(numpy=False)[500:])
+    ratio = (theta.std((0, 2)) * np.sqrt(12.0)).mean().item()
+    assert abs(ratio - 1.0) < 0.015, ratio
