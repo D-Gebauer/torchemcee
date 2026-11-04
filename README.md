@@ -43,6 +43,8 @@ A few things to keep in mind:
 
 The rest of the API follows emcee: all the moves (`StretchMove`, `DEMove`, `DESnookerMove`, `WalkMove`, `KDEMove`, `MHMove`, `GaussianMove`), weighted move lists, blobs, `get_chain` / `get_log_prob` / `get_autocorr_time`, `run_mcmc(None, n)` to continue a run, and so on. What's missing is `pool` / `vectorize` / `args`, which aren't needed here.
 
+`DESnookerMove` follows ter Braak & Vrugt (2008). All moves were checked against a flat 9-d box and a correlated 5-d Gaussian and agree with the exact widths to about 1 %.
+
 To write the chain to disk while running (needs `h5py`, or the `[hdf5]` extra):
 
 ```python
